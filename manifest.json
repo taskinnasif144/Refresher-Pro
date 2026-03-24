@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Random Page Refresher",
+  "version": "1.0.0",
+  "description": "Automatically refreshes the current tab at random intervals within a user-defined range.",
+  "permissions": ["storage", "alarms", "tabs", "notifications"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Random Refresher Settings"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.jpeg",
+    "32": "icons/icon32.jpeg",
+    "48": "icons/icon48.jpeg",
+    "128": "icons/icon128.jpeg"
+  }
+}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refresher Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Refresher <span>Pro</span></h1>
+      <p>Set random intervals for auto-refresh.</p>
+    </header>
+
+    <main>
+      <section class="controls">
+        <div class="input-group">
+          <label for="minTime">Min (secs)</label>
+          <input type="number" id="minTime" min="1" placeholder="30">
+        </div>
+        <div class="input-group">
+          <label for="maxTime">Max (secs)</label>
+          <input type="number" id="maxTime" min="1" placeholder="60">
+        </div>
+      </section>
+
+      <div class="status-container">
+        <span id="statusDot" class="status-dot"></span>
+        <span id="statusText">System Idle</span>
+      </div>
+
+      <div id="countdownContainer" class="countdown-display" style="display: none;">
+        <span class="countdown-label">Next Refresh In:</span>
+        <span id="countdownValue">--</span>s
+      </div>
+
+      <button id="toggleBtn" class="premium-button">Start Refresher</button>
+    </main>
+
+    <footer>
+      <p>© 2026 Random Refresher v1.0</p>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

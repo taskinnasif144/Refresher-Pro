@@ -1,0 +1,193 @@
+:root {
+  --bg-color: #0f172a;
+  --panel-bg: rgba(30, 41, 59, 0.7);
+  --accent-color: #3b82f6;
+  --accent-secondary: #06b6d4;
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-color);
+  color: var(--text-main);
+  width: 320px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.container {
+  padding: 24px;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent),
+              radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.1), transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 4px;
+}
+
+header h1 span {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+header p {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+.input-group input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fff;
+  font-size: 14px;
+  transition: var(--transition);
+  outline: none;
+}
+
+/* Hide spin buttons for cleaner look and more space */
+.input-group input::-webkit-outer-spin-button,
+.input-group input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-group input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.input-group input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.status-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4b5563;
+  transition: var(--transition);
+}
+
+.status-dot.active {
+  background: var(--success);
+  box-shadow: 0 0 12px var(--success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.premium-button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-secondary));
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.premium-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.premium-button:active {
+  transform: translateY(1px);
+}
+
+.premium-button.stop {
+  background: linear-gradient(135deg, var(--danger), #b91c1c);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.countdown-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  margin: 10px 0;
+}
+
+.countdown-label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+#countdownValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-secondary);
+}
+
+footer {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
