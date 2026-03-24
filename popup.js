@@ -10,11 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let countdownInterval;
 
   // 1. Initial Load - Get current state
-  chrome.storage.local.get(['minTime', 'maxTime', 'isActive', 'nextRefreshAt'], (result) => {
+  chrome.storage.local.get(['minTime', 'maxTime', 'isActive', 'nextRefreshAt', 'isBreakMode'], (result) => {
     if (result.minTime) minTimeInput.value = result.minTime;
     if (result.maxTime) maxTimeInput.value = result.maxTime;
 
-    updateUI(result.isActive);
+    updateUI(result.isActive, result.isBreakMode);
     if (result.isActive && result.nextRefreshAt) {
       startCountdown(Number(result.nextRefreshAt));
     }
@@ -23,8 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Storage Listener - Sync with background script
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === 'local') {
-      if (changes.isActive) {
-        updateUI(changes.isActive.newValue);
+      if (changes.isActive || changes.isBreakMode) {
+        chrome.storage.local.get(['isActive', 'isBreakMode'], (res) => {
+          updateUI(res.isActive, res.isBreakMode);
+        });
       }
       if (changes.nextRefreshAt && changes.nextRefreshAt.newValue) {
         startCountdown(Number(changes.nextRefreshAt.newValue));
@@ -86,9 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
             minTime: min,
             maxTime: max,
             isActive: true,
+            isBreakMode: false,
             targetTabId: tab.id
           }, () => {
-            updateUI(true);
+            updateUI(true, false);
             chrome.runtime.sendMessage({
               action: 'start',
               min: min,
@@ -101,19 +104,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  function updateUI(active) {
+  function updateUI(active, isBreakMode) {
     if (active) {
       toggleBtn.textContent = 'Stop Refresher';
       toggleBtn.classList.add('stop');
-      statusText.textContent = 'Refresher Active';
-      statusDot.classList.add('active');
       countdownContainer.style.display = 'flex';
+      
+      if (isBreakMode) {
+        statusText.textContent = 'Taking a Break (15m)';
+        statusText.style.color = '#f59e0b';
+        statusDot.style.background = '#f59e0b';
+        statusDot.style.boxShadow = '0 0 12px #f59e0b';
+      } else {
+        statusText.textContent = 'Refresher Active';
+        statusText.style.color = '';
+        statusDot.style.background = '';
+        statusDot.style.boxShadow = '';
+      }
+      statusDot.classList.add('active');
     } else {
       if (countdownInterval) clearInterval(countdownInterval);
       toggleBtn.textContent = 'Start Refresher';
       toggleBtn.classList.remove('stop');
       statusText.textContent = 'System Idle';
+      statusText.style.color = '';
       statusDot.classList.remove('active');
+      statusDot.style.background = '';
+      statusDot.style.boxShadow = '';
       countdownContainer.style.display = 'none';
       countdownValue.textContent = '--';
     }
