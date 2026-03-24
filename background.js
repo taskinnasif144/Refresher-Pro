@@ -66,17 +66,62 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       chrome.scripting.executeScript({
         target: { tabId: result.targetTabId },
         func: () => {
-          try {
-            // Smoothly scroll down by a random amount (between 100-800 pixels)
-            const scrollPixels = Math.floor(Math.random() * 700) + 100;
-            window.scrollBy({ top: scrollPixels, behavior: 'smooth' });
+          const simulateHumanMouse = (startX, startY, endX, endY) => {
+            return new Promise(resolve => {
+              const points = [];
+              const steps = Math.floor(Math.random() * 30) + 30; // 30-60 steps
+              const cx = (startX + endX) / 2 + (Math.random() * 300 - 150);
+              const cy = (startY + endY) / 2 + (Math.random() * 300 - 150);
 
-            // Wait 1-3 seconds, then scroll back up by a smaller random amount
-            setTimeout(() => {
-              const scrollBack = Math.floor(Math.random() * 300) + scrollPixels;
-              window.scrollBy({ top: -scrollBack, behavior: 'smooth' });
-            }, Math.floor(Math.random() * 2000) + 1000);
-          } catch (e) { }
+              for (let i = 0; i <= steps; i++) {
+                  let t = i / steps;
+                  const easeT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+                  let bx = (1 - easeT) * (1 - easeT) * startX + 2 * (1 - easeT) * easeT * cx + easeT * easeT * endX;
+                  let by = (1 - easeT) * (1 - easeT) * startY + 2 * (1 - easeT) * easeT * cy + easeT * easeT * endY;
+                  bx += (Math.random() * 6) - 3; // Jitter
+                  by += (Math.random() * 6) - 3;
+                  points.push({ x: bx, y: by });
+              }
+
+              let i = 0;
+              const moveInterval = setInterval(() => {
+                  if (i >= points.length) {
+                      clearInterval(moveInterval);
+                      document.dispatchEvent(new MouseEvent('mousemove', { clientX: endX, clientY: endY, bubbles: true }));
+                      resolve();
+                      return;
+                  }
+                  document.dispatchEvent(new MouseEvent('mousemove', { clientX: points[i].x, clientY: points[i].y, bubbles: true }));
+                  i++;
+              }, Math.floor(Math.random() * 10) + 15);
+            });
+          };
+
+          return new Promise(resolve => {
+            try {
+              window._ghostMouseLastPos = window._ghostMouseLastPos || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+              
+              // Move to a random centerish point before scrolling
+              const targetX = window.innerWidth / 2 + (Math.random() * 400 - 200);
+              const targetY = window.innerHeight / 2 + (Math.random() * 200 - 100);
+              
+              console.log(`[GhostMouse] Moving cursor to read area at (${Math.round(targetX)}, ${Math.round(targetY)})...`);
+              
+              simulateHumanMouse(window._ghostMouseLastPos.x, window._ghostMouseLastPos.y, targetX, targetY).then(() => {
+                window._ghostMouseLastPos = { x: targetX, y: targetY };
+                console.log(`[GhostMouse] Settled in read area. Performing smooth scrolls.`);
+                
+                const scrollPixels = Math.floor(Math.random() * 700) + 100;
+                window.scrollBy({ top: scrollPixels, behavior: 'smooth' });
+                
+                setTimeout(() => {
+                  const scrollBack = Math.floor(Math.random() * 300) + scrollPixels; // Bounces back slightly
+                  window.scrollBy({ top: -scrollBack, behavior: 'smooth' });
+                  resolve(true);
+                }, Math.floor(Math.random() * 2000) + 1000);
+              });
+            } catch(e) { resolve(false); }
+          });
         }
       }).catch(err => console.log('Scroll script failed:', err))
         .finally(() => {
@@ -150,16 +195,77 @@ chrome.alarms.onAlarm.addListener((alarm) => {
           chrome.scripting.executeScript({
             target: { tabId: result.targetTabId },
             func: () => {
-              try {
-                const navTabs = document.querySelectorAll('#manage-gigs-filter-tabs a');
-                if (navTabs && navTabs.length > 0) {
-                  const unselectedTabs = Array.from(navTabs).filter(t => !t.classList.contains('sel'));
-                  const listToPickFrom = unselectedTabs.length > 0 ? unselectedTabs : Array.from(navTabs);
-                  const randomTab = listToPickFrom[Math.floor(Math.random() * listToPickFrom.length)];
-                  if (randomTab) { randomTab.click(); return true; }
-                }
-                return false;
-              } catch (e) { return false; }
+              const simulateHumanMouse = (startX, startY, endX, endY) => {
+                return new Promise(resolve => {
+                  const points = [];
+                  const steps = Math.floor(Math.random() * 30) + 30; // 30-60 steps
+                  const cx = (startX + endX) / 2 + (Math.random() * 300 - 150);
+                  const cy = (startY + endY) / 2 + (Math.random() * 300 - 150);
+
+                  for (let i = 0; i <= steps; i++) {
+                      let t = i / steps;
+                      const easeT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+                      let bx = (1 - easeT) * (1 - easeT) * startX + 2 * (1 - easeT) * easeT * cx + easeT * easeT * endX;
+                      let by = (1 - easeT) * (1 - easeT) * startY + 2 * (1 - easeT) * easeT * cy + easeT * easeT * endY;
+                      bx += (Math.random() * 6) - 3;
+                      by += (Math.random() * 6) - 3;
+                      points.push({ x: bx, y: by });
+                  }
+
+                  let i = 0;
+                  const moveInterval = setInterval(() => {
+                      if (i >= points.length) {
+                          clearInterval(moveInterval);
+                          document.dispatchEvent(new MouseEvent('mousemove', { clientX: endX, clientY: endY, bubbles: true }));
+                          resolve();
+                          return;
+                      }
+                      document.dispatchEvent(new MouseEvent('mousemove', { clientX: points[i].x, clientY: points[i].y, bubbles: true }));
+                      i++;
+                  }, Math.floor(Math.random() * 10) + 15);
+                });
+              };
+
+              return new Promise(resolve => {
+                try {
+                  const navTabs = document.querySelectorAll('#manage-gigs-filter-tabs a');
+                  if (navTabs && navTabs.length > 0) {
+                    const unselectedTabs = Array.from(navTabs).filter(t => !t.classList.contains('sel'));
+                    const listToPickFrom = unselectedTabs.length > 0 ? unselectedTabs : Array.from(navTabs);
+                    const randomTab = listToPickFrom[Math.floor(Math.random() * listToPickFrom.length)];
+                    
+                    if (randomTab) {
+                      const rect = randomTab.getBoundingClientRect();
+                      const targetX = rect.left + rect.width / 2 + (Math.random() * 10 - 5);
+                      const targetY = rect.top + rect.height / 2 + (Math.random() * 4 - 2);
+                      
+                      window._ghostMouseLastPos = window._ghostMouseLastPos || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+                      
+                      console.log(`[GhostMouse] Calculating Curvy Path from (${Math.round(window._ghostMouseLastPos.x)}, ${Math.round(window._ghostMouseLastPos.y)}) to Gig Tab at (${Math.round(targetX)}, ${Math.round(targetY)})`);
+                      
+                      // Move mouse towards the tab
+                      simulateHumanMouse(window._ghostMouseLastPos.x, window._ghostMouseLastPos.y, targetX, targetY).then(() => {
+                        window._ghostMouseLastPos = { x: targetX, y: targetY };
+                        console.log(`[GhostMouse] Path complete. Hovering over tab for a bit...`);
+                        
+                        // Emit hover events
+                        randomTab.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                        randomTab.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+                        
+                        // Wait realistic time before clicking
+                        setTimeout(() => {
+                          console.log(`[GhostMouse] Executing click now!`);
+                          randomTab.click();
+                          resolve(true);
+                        }, Math.floor(Math.random() * 700) + 800);
+                      });
+                      
+                      return; // Explicitly ensure we wait for the Promise to resolve and click!
+                    }
+                  }
+                  resolve(false);
+                } catch(e) { resolve(false); }
+              });
             }
           }).then((injectionResults) => {
             const success = injectionResults && injectionResults[0] && injectionResults[0].result;
