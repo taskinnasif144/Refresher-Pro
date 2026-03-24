@@ -6,13 +6,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusDot = document.getElementById('statusDot');
   const countdownContainer = document.getElementById('countdownContainer');
   const countdownValue = document.getElementById('countdownValue');
+  
+  const scrollMinTimeInput = document.getElementById('scrollMinTime');
+  const scrollMaxTimeInput = document.getElementById('scrollMaxTime');
+  const tabMinTimeInput = document.getElementById('tabMinTime');
+  const tabMaxTimeInput = document.getElementById('tabMaxTime');
 
   let countdownInterval;
 
   // 1. Initial Load - Get current state
-  chrome.storage.local.get(['minTime', 'maxTime', 'isActive', 'nextRefreshAt', 'isBreakMode'], (result) => {
+  chrome.storage.local.get(['minTime', 'maxTime', 'scrollMinTime', 'scrollMaxTime', 'tabMinTime', 'tabMaxTime', 'isActive', 'nextRefreshAt', 'isBreakMode'], (result) => {
     if (result.minTime) minTimeInput.value = result.minTime;
     if (result.maxTime) maxTimeInput.value = result.maxTime;
+    if (result.scrollMinTime) scrollMinTimeInput.value = result.scrollMinTime;
+    if (result.scrollMaxTime) scrollMaxTimeInput.value = result.scrollMaxTime;
+    if (result.tabMinTime) tabMinTimeInput.value = result.tabMinTime;
+    if (result.tabMaxTime) tabMaxTimeInput.value = result.tabMaxTime;
 
     updateUI(result.isActive, result.isBreakMode);
     if (result.isActive && result.nextRefreshAt) {
@@ -56,8 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   toggleBtn.addEventListener('click', () => {
-    const min = parseInt(minTimeInput.value);
-    const max = parseInt(maxTimeInput.value);
+    const min = parseInt(minTimeInput.value) || 30;
+    const max = parseInt(maxTimeInput.value) || 60;
+    const scrollMin = parseInt(scrollMinTimeInput.value) || 10;
+    const scrollMax = parseInt(scrollMaxTimeInput.value) || 30;
+    const tabMin = parseInt(tabMinTimeInput.value) || 2;
+    const tabMax = parseInt(tabMaxTimeInput.value) || 5;
 
     if (isNaN(min) || isNaN(max) || min <= 0 || max <= 0) {
       alert('Please enter valid positive numbers.');
@@ -65,7 +78,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (min >= max) {
-      alert('Maximum time must be greater than minimum time.');
+      alert('Maximum refresh time must be greater than minimum time.');
+      return;
+    }
+    
+    if (scrollMin >= scrollMax) {
+      alert('Maximum scroll interval must be greater than minimum.');
+      return;
+    }
+    
+    if (tabMin >= tabMax) {
+      alert('Maximum tab switch refreshes must be greater than minimum.');
       return;
     }
 
@@ -87,6 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
           chrome.storage.local.set({
             minTime: min,
             maxTime: max,
+            scrollMinTime: scrollMin,
+            scrollMaxTime: scrollMax,
+            tabMinTime: tabMin,
+            tabMaxTime: tabMax,
             isActive: true,
             isBreakMode: false,
             targetTabId: tab.id
@@ -96,6 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
               action: 'start',
               min: min,
               max: max,
+              scrollMin: scrollMin,
+              scrollMax: scrollMax,
+              tabMin: tabMin,
+              tabMax: tabMax,
               tabId: tab.id
             });
           });
