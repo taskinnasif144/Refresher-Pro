@@ -15,7 +15,9 @@ function startAlarms(min, max, tabId, callback) {
   chrome.storage.local.set({ 
     targetTabId: tabId,
     sessionStartTime: Date.now(),
-    isBreakMode: false
+    isBreakMode: false,
+    refreshCount: 0,
+    targetRefreshThreshold: Math.floor(Math.random() * 4) + 2 // 2 to 5
   }, () => {
     scheduleNextRefresh(min, max, callback);
   });
@@ -103,7 +105,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 
   if (alarm.name === 'refresh-alarm') {
-    chrome.storage.local.get(['minTime', 'maxTime', 'isActive', 'targetTabId', 'sessionStartTime', 'isBreakMode'], (result) => {
+    chrome.storage.local.get(['minTime', 'maxTime', 'isActive', 'targetTabId', 'sessionStartTime', 'isBreakMode', 'refreshCount', 'targetRefreshThreshold'], (result) => {
       if (!result.isActive || !result.targetTabId) return;
 
       // Try to get the tab to check if it still exists
@@ -135,13 +137,74 @@ chrome.alarms.onAlarm.addListener((alarm) => {
           return;
         }
 
-        // Reload the specific target tab
+        // Feature 2: Fiverr Tab Switching
+        let currentCount = (result.refreshCount || 0) + 1;
+        let threshold = result.targetRefreshThreshold || (Math.floor(Math.random() * 4) + 2);
+
+        if (currentCount >= threshold) {
+          console.log(`Threshold reached (${currentCount}/${threshold}), attempting to switch Fiverr tabs.`);
+          
+          chrome.scripting.executeScript({
+            target: { tabId: result.targetTabId },
+            func: () => {
+              try {
+                const navTabs = document.querySelectorAll('#manage-gigs-filter-tabs a');
+                if (navTabs && navTabs.length > 0) {
+                  // Don't click the currently selected one (.sel class in Fiverr's code)
+                  const unselectedTabs = Array.from(navTabs).filter(t => !t.classList.contains('sel'));
+                  
+                  const listToPickFrom = unselectedTabs.length > 0 ? unselectedTabs : Array.from(navTabs);
+                  const randomTab = listToPickFrom[Math.floor(Math.random() * listToPickFrom.length)];
+                  
+                  if (randomTab) {
+                    randomTab.click();
+                    return true;
+                  }
+                }
+                return false;
+              } catch(e) {
+                return false;
+              }
+            }
+          }).then((injectionResults) => {
+            const success = injectionResults && injectionResults[0] && injectionResults[0].result;
+            
+            if (success) {
+              console.log('Successfully clicked a random Fiverr gig tab.');
+            } else {
+              console.log('Not on Fiverr Gigs page or tabs not found. Doing normal reload.');
+              chrome.tabs.reload(result.targetTabId);
+            }
+            
+            // Reset counter and trigger next refresh schedule
+            chrome.storage.local.set({
+              refreshCount: 0,
+              targetRefreshThreshold: Math.floor(Math.random() * 4) + 2
+            }, () => {
+              scheduleNextRefresh(result.minTime, result.maxTime);
+            });
+            
+          }).catch(err => {
+            console.warn('Script error, defaulting to normal reload.', err);
+            chrome.tabs.reload(result.targetTabId);
+            chrome.storage.local.set({ refreshCount: 0 }, () => {
+              scheduleNextRefresh(result.minTime, result.maxTime);
+            });
+          });
+          
+          return; // Exit normal flow since we're handling scheduling asynchronously
+        }
+
+        // Normal flow (if threshold not reached)
         chrome.tabs.reload(result.targetTabId);
-        console.log(`Target tab (${tab.url}) reloaded.`);
+        console.log(`Target tab (${tab.url}) reloaded. Normal refresh count: ${currentCount}/${threshold}`);
         
-        // Schedule next refresh
-        scheduleNextRefresh(result.minTime, result.maxTime);
+        // Save the incremented count and schedule next refresh
+        chrome.storage.local.set({ refreshCount: currentCount }, () => {
+          scheduleNextRefresh(result.minTime, result.maxTime);
+        });
       });
     });
   }
 });
+
